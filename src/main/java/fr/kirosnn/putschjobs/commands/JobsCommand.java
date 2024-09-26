@@ -6,6 +6,9 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -14,12 +17,14 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 
-public class JobsCommand implements CommandExecutor {
+public class JobsCommand implements CommandExecutor, Listener {
 
     private final PutschJobs plugin;
 
     public JobsCommand(PutschJobs plugin) {
         this.plugin = plugin;
+        // Enregistrement de l'écouteur pour les événements liés à l'inventaire
+        Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 
     @Override
@@ -51,15 +56,31 @@ public class JobsCommand implements CommandExecutor {
 
         player.openInventory(inventory);
 
-        Bukkit.getPluginManager().registerEvents(new org.bukkit.event.Listener() {
-            @org.bukkit.event.EventHandler
-            public void onInventoryClose(InventoryCloseEvent event) {
-                if (event.getPlayer().equals(player)) {
-                    player.playSound(player.getLocation(), Sound.BLOCK_CHEST_CLOSE, 1.0f, 1.0f); // Joue le son à la fermeture
-                }
-            }
-        }, plugin);
-
         return true;
+    }
+
+    // Événement lors de la fermeture de l'inventaire
+    @EventHandler
+    public void onInventoryClose(InventoryCloseEvent event) {
+        Player player = (Player) event.getPlayer();
+        if (event.getView().getTitle().equals(ChatColor.translateAlternateColorCodes('&', plugin.getInventoryConfig().getString("main-menu.title")))) {
+            player.playSound(player.getLocation(), Sound.BLOCK_CHEST_CLOSE, 1.0f, 1.0f);
+        }
+    }
+
+    // Empêche les joueurs de prendre les items dans l'inventaire des jobs
+    @EventHandler
+    public void onInventoryClick(InventoryClickEvent event) {
+        if (event.getView().getTitle().equals(ChatColor.translateAlternateColorCodes('&', plugin.getInventoryConfig().getString("main-menu.title")))) {
+            event.setCancelled(true); // Empêche de prendre ou de déplacer des objets
+            ItemStack clickedItem = event.getCurrentItem();
+            if (clickedItem == null || !clickedItem.hasItemMeta()) {
+                return; // Ignore si l'item n'a pas de méta
+            }
+            // Traitement du clic sur l'item (par exemple, ouvrir un menu de job)
+            String jobName = ChatColor.stripColor(clickedItem.getItemMeta().getDisplayName());
+            event.getWhoClicked().sendMessage(ChatColor.GREEN + "Tu as sélectionné le job: " + jobName);
+            // tu pourrais ajouter la logique pour ouvrir des sous-menus spécifiques aux jobs
+        }
     }
 }
