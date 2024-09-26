@@ -2,7 +2,6 @@ package fr.kirosnn.putschjobs;
 
 import fr.kirosnn.putschjobs.Managers.JobManager;
 import fr.kirosnn.putschjobs.commands.JobsCommand;
-import fr.kirosnn.putschjobs.listeners.MenuListener;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class PutschJobs extends JavaPlugin {
