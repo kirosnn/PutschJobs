@@ -1,65 +1,69 @@
 package fr.kirosnn.putschjobs.commands;
 
+import fr.kirosnn.putschjobs.Jobs.Job;
+import fr.kirosnn.putschjobs.Jobs.JobObjective;
+import fr.kirosnn.putschjobs.Managers.JobManager;
 import fr.kirosnn.putschjobs.PutschJobs;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.Sound;
-import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.InventoryCloseEvent;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+
+import java.util.List;
+import java.util.Map;
 
 public class JobsCommand implements CommandExecutor {
 
     private final PutschJobs plugin;
+    private final JobManager jobManager;
 
-    public JobsCommand(PutschJobs plugin) {
+    public JobsCommand(PutschJobs plugin, JobManager jobManager) {
         this.plugin = plugin;
+        this.jobManager = jobManager;
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage(ChatColor.RED + "Cette commande ne peut être utilisée que par des joueurs.");
+            sender.sendMessage("Seuls les joueurs peuvent utiliser cette commande !");
             return true;
         }
 
         Player player = (Player) sender;
 
-        String title = ChatColor.translateAlternateColorCodes('&', plugin.getInventoryConfig().getString("main-menu.title"));
-        int size = plugin.getInventoryConfig().getInt("main-menu.size") * 9;
-        Inventory inventory = Bukkit.createInventory(null, size, title);
+        Inventory jobMenu = Bukkit.createInventory(null, 54, plugin.getConfig().getString("interface.name"));
 
-        plugin.getInventoryConfig().getConfigurationSection("main-menu.jobs").getKeys(false).forEach(jobKey -> {
-            String jobName = plugin.getInventoryConfig().getString("main-menu.jobs." + jobKey + ".name");
-            int slot = plugin.getInventoryConfig().getInt("main-menu.jobs." + jobKey + ".slot");
-            Material itemMaterial = Material.valueOf(plugin.getInventoryConfig().getString("main-menu.jobs." + jobKey + ".item"));
-            ItemStack item = new ItemStack(itemMaterial);
+        Map<String, Job> jobs = jobManager.getJobs();
+        int slot = 0;
+
+        for (Map.Entry<String, Job> entry : jobs.entrySet()) {
+            Job job = entry.getValue();
+
+            ItemStack item = new ItemStack(Material.DIAMOND_AXE);
+
             ItemMeta meta = item.getItemMeta();
 
-            meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', jobName));
-            meta.setLore(plugin.getInventoryConfig().getStringList("main-menu.jobs." + jobKey + ".lore"));
+            meta.setDisplayName(job.getFriendlyName());
+
+            List<String> lore = meta.getLore();
+            for (Map.Entry<String, JobObjective> objectiveEntry : job.getObjectives().entrySet()) {
+                JobObjective objective = objectiveEntry.getValue();
+
+                lore.add(objective.getDescription() + " (" + objective.getXp() + " XP");
+            }
+
+            meta.setLore(lore);
             item.setItemMeta(meta);
 
-            inventory.setItem(slot, item);
-        });
+            jobMenu.setItem(slot++, item);
+        }
 
-        player.openInventory(inventory);
-
-        Bukkit.getPluginManager().registerEvents(new org.bukkit.event.Listener() {
-            @org.bukkit.event.EventHandler
-            public void onInventoryClose(InventoryCloseEvent event) {
-                if (event.getPlayer().equals(player)) {
-                    player.playSound(player.getLocation(), Sound.BLOCK_CHEST_CLOSE, 1.0f, 1.0f); // Joue le son à la fermeture
-                }
-            }
-        }, plugin);
-
+        player.openInventory(jobMenu);
         return true;
     }
 }

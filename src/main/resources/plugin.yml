@@ -4,10 +4,4 @@ main: fr.kirosnn.putschjobs.PutschJobs
 commands:
   jobs:
     description: Commande de base du plugin.
-  jobs reload:
-    description: Permet de recharger le plugin.
-    permission: jobs.admin
-
-permission:
-  jobs.admin:
-    default: op
+    usage: /jobs

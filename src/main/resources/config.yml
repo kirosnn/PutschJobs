@@ -1,0 +1,36 @@
+interface:
+  name: "Menu des Jobs"
+  size: 54
+  items:
+    guerrier:
+      type : DIAMOND_AXE
+      name: "§Guerrier"
+      slot: 13
+      actions:
+        - "open:guerrier_menu"
+    guerrier_menu:
+      name: "§bGuerrier - Menu"
+      size: 36
+      items:
+        player_head:
+          type: PLAYER_HEAD
+          name: "%player_name%"
+          slot: 4
+        potion:
+          type: WATER_BOTTLE
+          name: "§bNiveaux Actuel"
+          slot: 29
+          actions:
+            - "open:level_menu"
+        gold_ingot:
+          type: GOLD_INGOT
+          name: "§Comment XP?"
+          slot: 32
+          actions:
+            - "open:xp_menu"
+    level_menu:
+      name: "§9Niveau Actuel"
+      size: 54
+    xp_menu:
+      name: "§7Comment XP?"
+      size: 54
